@@ -1,37 +1,17 @@
-import { useEffect, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-const generateData = () => {
-  return Array.from({ length: 20 }, (_, i) => ({
-    time: `${String(Math.floor((Date.now() / 1000 - (20 - i) * 60) / 3600) % 24).padStart(2, '0')}:${String(Math.floor((Date.now() / 1000 - (20 - i) * 60) / 60) % 60).padStart(2, '0')}`,
-    normal: Math.floor(Math.random() * 3000 + 2000),
-    threats: Math.floor(Math.random() * 500 + 100),
-  }));
-};
+interface NetworkChartProps {
+  data: Array<{ time: string; normal: number; threats: number }>;
+}
 
-export const NetworkChart = () => {
-  const [data, setData] = useState(generateData());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setData((prev) => {
-        const newData = [...prev.slice(1)];
-        const now = new Date();
-        newData.push({
-          time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
-          normal: Math.floor(Math.random() * 3000 + 2000),
-          threats: Math.floor(Math.random() * 500 + 100),
-        });
-        return newData;
-      });
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
+export const NetworkChart = ({ data }: NetworkChartProps) => {
+  const displayData = data.length > 0 ? data : [
+    { time: '00:00', normal: 0, threats: 0 }
+  ];
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <AreaChart data={data}>
+      <AreaChart data={displayData}>
         <defs>
           <linearGradient id="normalGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />

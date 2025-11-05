@@ -5,8 +5,11 @@ import { StatsCard } from "./StatsCard";
 import { ThreatAlert } from "./ThreatAlert";
 import { NetworkChart } from "./NetworkChart";
 import { RecentActivity } from "./RecentActivity";
+import { useIDSEngine } from "@/hooks/useIDSEngine";
 
 const Dashboard = () => {
+  const { isActive, threats, events, stats, trafficData } = useIDSEngine();
+
   return (
     <div className="min-h-screen bg-background p-6 space-y-6">
       {/* Header */}
@@ -37,32 +40,32 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Threats Detected"
-          value="247"
-          change="+12% from last hour"
+          value={stats.threatsDetected.toString()}
+          change={`${stats.threatsBlocked} blocked automatically`}
           icon={AlertTriangle}
           trend="up"
           variant="danger"
         />
         <StatsCard
           title="Blocked IPs"
-          value="89"
-          change="+5 new blocks"
+          value={stats.blockedIPs.toString()}
+          change="Active threat prevention"
           icon={Lock}
           trend="up"
           variant="warning"
         />
         <StatsCard
-          title="Active Monitors"
-          value="12"
-          change="All systems operational"
+          title="Packets Analyzed"
+          value={stats.totalPackets.toString()}
+          change={`${stats.normalPackets} normal traffic`}
           icon={Eye}
           trend="neutral"
           variant="success"
         />
         <StatsCard
-          title="Traffic Volume"
-          value="2.4TB"
-          change="Normal levels"
+          title="Detection Rate"
+          value={stats.totalPackets > 0 ? `${Math.round((stats.threatsDetected / stats.totalPackets) * 100)}%` : "0%"}
+          change="Hybrid detection active"
           icon={Database}
           trend="neutral"
           variant="info"
@@ -86,7 +89,7 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <NetworkChart />
+            <NetworkChart data={trafficData} />
           </CardContent>
         </Card>
 
@@ -100,7 +103,7 @@ const Dashboard = () => {
             <CardDescription>Recent security incidents</CardDescription>
           </CardHeader>
           <CardContent>
-            <ThreatAlert />
+            <ThreatAlert threats={threats} />
           </CardContent>
         </Card>
       </div>
@@ -112,7 +115,7 @@ const Dashboard = () => {
           <CardDescription>Chronological log of system activity</CardDescription>
         </CardHeader>
         <CardContent>
-          <RecentActivity />
+          <RecentActivity events={events} />
         </CardContent>
       </Card>
     </div>
