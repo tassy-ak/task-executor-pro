@@ -21,8 +21,8 @@ const severityColors = {
   info: "text-primary",
 };
 
-export const RecentActivity = ({ events }: RecentActivityProps) => {
-  if (events.length === 0) {
+export const RecentActivity = ({ events = [] }: RecentActivityProps) => {
+  if (!events || events.length === 0) {
     return (
       <div className="h-[300px] flex items-center justify-center text-muted-foreground">
         <div className="text-center space-y-2">

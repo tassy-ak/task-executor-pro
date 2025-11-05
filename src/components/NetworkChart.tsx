@@ -4,8 +4,8 @@ interface NetworkChartProps {
   data: Array<{ time: string; normal: number; threats: number }>;
 }
 
-export const NetworkChart = ({ data }: NetworkChartProps) => {
-  const displayData = data.length > 0 ? data : [
+export const NetworkChart = ({ data = [] }: NetworkChartProps) => {
+  const displayData = data && data.length > 0 ? data : [
     { time: '00:00', normal: 0, threats: 0 }
   ];
 

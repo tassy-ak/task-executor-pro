@@ -25,8 +25,8 @@ const detectionMethodIcons = {
   hybrid: AlertTriangle,
 };
 
-export const ThreatAlert = ({ threats }: ThreatAlertProps) => {
-  if (threats.length === 0) {
+export const ThreatAlert = ({ threats = [] }: ThreatAlertProps) => {
+  if (!threats || threats.length === 0) {
     return (
       <div className="h-[400px] flex items-center justify-center text-muted-foreground">
         <div className="text-center space-y-2">
