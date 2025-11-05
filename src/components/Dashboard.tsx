@@ -1,6 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, AlertTriangle, Activity, Lock, Eye, Database } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Shield, AlertTriangle, Activity, Lock, Eye, Database, Download } from "lucide-react";
 import { StatsCard } from "./StatsCard";
 import { ThreatAlert } from "./ThreatAlert";
 import { NetworkChart } from "./NetworkChart";
@@ -8,6 +10,7 @@ import { RecentActivity } from "./RecentActivity";
 import { useIDSEngine } from "@/hooks/useIDSEngine";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { isActive, threats, events, stats, trafficData } = useIDSEngine();
 
   return (
@@ -27,13 +30,19 @@ const Dashboard = () => {
             </p>
           </div>
         </div>
-        <Badge variant="outline" className="px-4 py-2 text-sm border-primary/30 bg-primary/5">
-          <span className="relative flex h-2 w-2 mr-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-          </span>
-          System Active
-        </Badge>
+        <div className="flex gap-3">
+          <Button onClick={() => navigate('/install')} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Install App
+          </Button>
+          <Badge variant="outline" className="px-4 py-2 text-sm border-primary/30 bg-primary/5">
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+            System Active
+          </Badge>
+        </div>
       </header>
 
       {/* Stats Grid */}
