@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,37 @@ import { useIDSEngine } from "@/hooks/useIDSEngine";
 const Dashboard = () => {
   const navigate = useNavigate();
   const { isActive, threats, events, stats, trafficData } = useIDSEngine();
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) {
+      navigate('/install');
+      return;
+    }
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+
+    if (outcome === 'accepted') {
+      setIsInstallable(false);
+    }
+    setDeferredPrompt(null);
+  };
 
   return (
     <div className="min-h-screen bg-background p-6 space-y-6">
@@ -31,7 +63,7 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="flex gap-3">
-          <Button onClick={() => navigate('/install')} variant="outline" className="gap-2">
+          <Button onClick={handleInstall} variant="outline" className="gap-2">
             <Download className="h-4 w-4" />
             Install App
           </Button>
