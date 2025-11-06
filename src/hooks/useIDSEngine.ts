@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { NetworkPacket, AnomalyDetector, analyzePacket } from '@/services/packetAnalyzer';
 import { TrafficGenerator } from '@/services/packetGenerator';
 import { ThreatMitigationSystem } from '@/services/threatMitigation';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface DetectedThreat {
   id: string;
@@ -149,6 +150,53 @@ export function useIDSEngine() {
         threatsBlocked: status === 'blocked' ? prev.threatsBlocked + 1 : prev.threatsBlocked,
         blockedIPs: mitigationSystemRef.current.getBlockedIPs().length
       }));
+
+      // Save threat to database
+      setTimeout(() => {
+        supabase.from('threats').insert({
+          threat_type: analysisResult.threatType || 'Unknown Threat',
+          severity: analysisResult.severity || 'medium',
+          source_ip: packet.sourceIP,
+          destination_ip: packet.destIP,
+          description: analysisResult.details || 'No details available',
+          blocked: status === 'blocked'
+        }).then(({ error }) => {
+          if (error) console.error('Error saving threat:', error);
+        });
+
+        // Save blocked IP to database if blocked
+        if (status === 'blocked') {
+          supabase.from('blocked_ips')
+            .select('*')
+            .eq('ip_address', packet.sourceIP)
+            .maybeSingle()
+            .then(({ data, error }) => {
+              if (error) {
+                console.error('Error checking blocked IP:', error);
+                return;
+              }
+
+              if (data) {
+                // Update existing blocked IP
+                supabase.from('blocked_ips')
+                  .update({ threat_count: data.threat_count + 1 })
+                  .eq('id', data.id)
+                  .then(({ error: updateError }) => {
+                    if (updateError) console.error('Error updating blocked IP:', updateError);
+                  });
+              } else {
+                // Insert new blocked IP
+                supabase.from('blocked_ips').insert({
+                  ip_address: packet.sourceIP,
+                  reason: analysisResult.threatType || 'Critical threat detected',
+                  threat_count: 1
+                }).then(({ error: insertError }) => {
+                  if (insertError) console.error('Error inserting blocked IP:', insertError);
+                });
+              }
+            });
+        }
+      }, 0);
     }
   }, [addEvent]);
 

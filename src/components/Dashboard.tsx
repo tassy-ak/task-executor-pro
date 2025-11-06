@@ -3,18 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, AlertTriangle, Activity, Lock, Eye, Database, Download } from "lucide-react";
+import { Shield, AlertTriangle, Activity, Lock, Eye, Database, Download, LogOut } from "lucide-react";
 import { StatsCard } from "./StatsCard";
 import { ThreatAlert } from "./ThreatAlert";
 import { NetworkChart } from "./NetworkChart";
 import { RecentActivity } from "./RecentActivity";
 import { useIDSEngine } from "@/hooks/useIDSEngine";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { isActive, threats, events, stats, trafficData } = useIDSEngine();
+  const { user, signOut } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -45,6 +53,13 @@ const Dashboard = () => {
     setDeferredPrompt(null);
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  if (!user) return null;
+
   return (
     <div className="min-h-screen bg-background p-6 space-y-6">
       {/* Header */}
@@ -67,6 +82,10 @@ const Dashboard = () => {
             <Download className="h-4 w-4" />
             Install App
           </Button>
+          <Button onClick={handleSignOut} variant="outline" className="gap-2">
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
           <Badge variant="outline" className="px-4 py-2 text-sm border-primary/30 bg-primary/5">
             <span className="relative flex h-2 w-2 mr-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -79,22 +98,26 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="Threats Detected"
-          value={stats.threatsDetected.toString()}
-          change={`${stats.threatsBlocked} blocked automatically`}
-          icon={AlertTriangle}
-          trend="up"
-          variant="danger"
-        />
-        <StatsCard
-          title="Blocked IPs"
-          value={stats.blockedIPs.toString()}
-          change="Active threat prevention"
-          icon={Lock}
-          trend="up"
-          variant="warning"
-        />
+        <div onClick={() => navigate('/threats')} className="cursor-pointer">
+          <StatsCard
+            title="Threats Detected"
+            value={stats.threatsDetected.toString()}
+            change={`${stats.threatsBlocked} blocked automatically`}
+            icon={AlertTriangle}
+            trend="up"
+            variant="danger"
+          />
+        </div>
+        <div onClick={() => navigate('/blocked-ips')} className="cursor-pointer">
+          <StatsCard
+            title="Blocked IPs"
+            value={stats.blockedIPs.toString()}
+            change="Active threat prevention"
+            icon={Lock}
+            trend="up"
+            variant="warning"
+          />
+        </div>
         <StatsCard
           title="Packets Analyzed"
           value={stats.totalPackets.toString()}

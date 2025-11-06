@@ -14,16 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blocked_ips: {
+        Row: {
+          blocked_at: string
+          blocked_by: string | null
+          id: string
+          ip_address: string
+          reason: string
+          status: string
+          threat_count: number
+        }
+        Insert: {
+          blocked_at?: string
+          blocked_by?: string | null
+          id?: string
+          ip_address: string
+          reason: string
+          status?: string
+          threat_count?: number
+        }
+        Update: {
+          blocked_at?: string
+          blocked_by?: string | null
+          id?: string
+          ip_address?: string
+          reason?: string
+          status?: string
+          threat_count?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      threats: {
+        Row: {
+          blocked: boolean
+          created_by: string | null
+          description: string
+          destination_ip: string | null
+          detected_at: string
+          id: string
+          severity: string
+          source_ip: string
+          status: string
+          threat_type: string
+        }
+        Insert: {
+          blocked?: boolean
+          created_by?: string | null
+          description: string
+          destination_ip?: string | null
+          detected_at?: string
+          id?: string
+          severity: string
+          source_ip: string
+          status?: string
+          threat_type: string
+        }
+        Update: {
+          blocked?: boolean
+          created_by?: string | null
+          description?: string
+          destination_ip?: string | null
+          detected_at?: string
+          id?: string
+          severity?: string
+          source_ip?: string
+          status?: string
+          threat_type?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +266,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
