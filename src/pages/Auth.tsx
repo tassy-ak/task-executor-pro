@@ -8,6 +8,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+const signInSchema = z.object({
+  email: z.string().trim().email('Invalid email address').max(255, 'Email too long'),
+  password: z.string().min(6, 'Password must be at least 6 characters')
+});
+
+const signUpSchema = z.object({
+  email: z.string().trim().email('Invalid email address').max(255, 'Email too long'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  fullName: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name too long')
+});
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -22,20 +37,41 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      const validation = signInSchema.safeParse({ email, password });
+      
+      if (!validation.success) {
+        const firstError = validation.error.errors[0];
+        toast({
+          title: 'Validation Error',
+          description: firstError.message,
+          variant: 'destructive'
+        });
+        setLoading(false);
+        return;
+      }
 
-    if (error) {
+      const { error } = await signIn(validation.data.email, validation.data.password);
+
+      if (error) {
+        toast({
+          title: 'Error signing in',
+          description: error.message,
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Success!',
+          description: 'Signed in successfully'
+        });
+        navigate('/');
+      }
+    } catch (err) {
       toast({
-        title: 'Error signing in',
-        description: error.message,
+        title: 'Error',
+        description: 'An unexpected error occurred',
         variant: 'destructive'
       });
-    } else {
-      toast({
-        title: 'Success!',
-        description: 'Signed in successfully'
-      });
-      navigate('/');
     }
 
     setLoading(false);
@@ -45,20 +81,45 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signUp(email, password, fullName);
+    try {
+      const validation = signUpSchema.safeParse({ email, password, fullName });
+      
+      if (!validation.success) {
+        const firstError = validation.error.errors[0];
+        toast({
+          title: 'Validation Error',
+          description: firstError.message,
+          variant: 'destructive'
+        });
+        setLoading(false);
+        return;
+      }
 
-    if (error) {
+      const { error } = await signUp(
+        validation.data.email, 
+        validation.data.password, 
+        validation.data.fullName
+      );
+
+      if (error) {
+        toast({
+          title: 'Error signing up',
+          description: error.message,
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Success!',
+          description: 'Account created successfully'
+        });
+        navigate('/');
+      }
+    } catch (err) {
       toast({
-        title: 'Error signing up',
-        description: error.message,
+        title: 'Error',
+        description: 'An unexpected error occurred',
         variant: 'destructive'
       });
-    } else {
-      toast({
-        title: 'Success!',
-        description: 'Account created successfully'
-      });
-      navigate('/');
     }
 
     setLoading(false);
@@ -145,8 +206,11 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={8}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Must be 8+ characters with uppercase and number
+                  </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
