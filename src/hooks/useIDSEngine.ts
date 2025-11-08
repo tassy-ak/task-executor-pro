@@ -160,8 +160,38 @@ export function useIDSEngine() {
           destination_ip: packet.destIP,
           description: analysisResult.details || 'No details available',
           blocked: status === 'blocked'
-        }).then(({ error }) => {
-          if (error) console.error('Error saving threat:', error);
+        })
+        .select()
+        .single()
+        .then(({ data: threatData, error }) => {
+          if (error) {
+            console.error('Error saving threat:', error);
+            return;
+          }
+          
+          // Trigger AI analysis asynchronously (non-blocking)
+          if (threatData) {
+            supabase.functions.invoke('analyze-threat', {
+              body: {
+                threatId: threatData.id,
+                threatData: {
+                  threatType: analysisResult.threatType,
+                  severity: analysisResult.severity,
+                  detectionMethod: analysisResult.detectionMethod,
+                  sourceIP: packet.sourceIP,
+                  destIP: packet.destIP,
+                  details: analysisResult.details,
+                  confidence: analysisResult.confidence || 0.5
+                }
+              }
+            }).then(({ error: aiError }) => {
+              if (aiError) {
+                console.error('Error triggering AI analysis:', aiError);
+              } else {
+                console.log('AI analysis triggered for threat:', threatData.id);
+              }
+            });
+          }
         });
 
         // Save blocked IP to database if blocked

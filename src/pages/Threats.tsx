@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, ArrowLeft, AlertTriangle, Clock, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import ThreatAnalysis from '@/components/ThreatAnalysis';
 
 interface Threat {
   id: string;
@@ -17,6 +18,8 @@ interface Threat {
   detected_at: string;
   status: string;
   blocked: boolean;
+  ai_analysis: string | null;
+  ai_analyzed_at: string | null;
 }
 
 const Threats = () => {
@@ -149,6 +152,12 @@ const Threats = () => {
                     </div>
                   </div>
                 </div>
+                
+                {threat.ai_analysis && (
+                  <div className="mt-4">
+                    <ThreatAnalysis analysis={threat.ai_analysis} />
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))

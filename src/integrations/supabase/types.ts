@@ -67,6 +67,8 @@ export type Database = {
       }
       threats: {
         Row: {
+          ai_analysis: string | null
+          ai_analyzed_at: string | null
           blocked: boolean
           created_by: string | null
           description: string
@@ -79,6 +81,8 @@ export type Database = {
           threat_type: string
         }
         Insert: {
+          ai_analysis?: string | null
+          ai_analyzed_at?: string | null
           blocked?: boolean
           created_by?: string | null
           description: string
@@ -91,6 +95,8 @@ export type Database = {
           threat_type: string
         }
         Update: {
+          ai_analysis?: string | null
+          ai_analyzed_at?: string | null
           blocked?: boolean
           created_by?: string | null
           description?: string
