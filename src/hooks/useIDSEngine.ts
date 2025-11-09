@@ -194,19 +194,26 @@ export function useIDSEngine() {
 
             // Send push notification for high severity threats
             if (analysisResult.severity === 'critical' || analysisResult.severity === 'high') {
-              supabase.functions.invoke('send-notification', {
-                body: {
-                  title: `${analysisResult.severity.toUpperCase()} Security Threat Detected`,
-                  body: `${analysisResult.threatType} from ${packet.sourceIP}`,
-                  data: {
-                    threatId: threatData.id,
-                    type: analysisResult.threatType,
-                    severity: analysisResult.severity,
-                  },
-                },
-              }).then(({ error: notificationError }) => {
-                if (notificationError) {
-                  console.error('Error sending notification:', notificationError);
+              // Get current user
+              supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
+                if (currentUser) {
+                  supabase.functions.invoke('send-notification', {
+                    body: {
+                      title: `${analysisResult.severity.toUpperCase()} Security Threat Detected`,
+                      body: `${analysisResult.threatType} from ${packet.sourceIP}`,
+                      userId: currentUser.id,
+                      severity: analysisResult.severity,
+                      data: {
+                        threatId: threatData.id,
+                        type: analysisResult.threatType,
+                        severity: analysisResult.severity,
+                      },
+                    },
+                  }).then(({ error: notificationError }) => {
+                    if (notificationError) {
+                      console.error('Error sending notification:', notificationError);
+                    }
+                  });
                 }
               });
             }

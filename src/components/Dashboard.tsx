@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, AlertTriangle, Activity, Lock, Eye, Database, Download, LogOut } from "lucide-react";
+import { Shield, AlertTriangle, Activity, Lock, Eye, Database, Download, LogOut, Settings } from "lucide-react";
 import { StatsCard } from "./StatsCard";
 import { ThreatAlert } from "./ThreatAlert";
 import { NetworkChart } from "./NetworkChart";
@@ -81,6 +81,10 @@ const Dashboard = () => {
           <Button onClick={handleInstall} variant="outline" className="gap-2">
             <Download className="h-4 w-4" />
             Install App
+          </Button>
+          <Button onClick={() => navigate('/settings')} variant="outline" className="gap-2">
+            <Settings className="h-4 w-4" />
+            Settings
           </Button>
           <Button onClick={handleSignOut} variant="outline" className="gap-2">
             <LogOut className="h-4 w-4" />

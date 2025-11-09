@@ -12,7 +12,8 @@ interface NotificationPayload {
   icon?: string;
   badge?: string;
   data?: Record<string, any>;
-  userId?: string; // If provided, send to specific user. Otherwise, send to all subscriptions
+  userId?: string;
+  severity?: string;
 }
 
 serve(async (req) => {
@@ -27,9 +28,61 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    const { title, body, icon, badge, data, userId }: NotificationPayload = await req.json();
+    const { title, body, icon, badge, data, userId, severity }: NotificationPayload = await req.json();
 
-    console.log('Sending notification:', { title, body, userId });
+    console.log('Sending notification:', { title, body, userId, severity });
+
+    // Check user notification preferences
+    if (userId && severity) {
+      const { data: prefs, error: prefsError } = await supabaseClient
+        .from('notification_preferences')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (prefsError) {
+        console.error('Error fetching preferences:', prefsError);
+      } else if (prefs) {
+        // Check if notifications are enabled
+        if (!prefs.enabled) {
+          return new Response(
+            JSON.stringify({ message: 'Notifications disabled for user' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+          );
+        }
+
+        // Check severity level preference
+        const severityLevels = prefs.severity_levels as string[];
+        if (!severityLevels.includes(severity)) {
+          return new Response(
+            JSON.stringify({ message: 'Severity level not in user preferences' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+          );
+        }
+
+        // Check quiet hours
+        if (prefs.quiet_hours_enabled && prefs.quiet_hours_start && prefs.quiet_hours_end) {
+          const now = new Date();
+          const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          
+          const isInQuietHours = (current: string, start: string, end: string) => {
+            if (start < end) {
+              return current >= start && current < end;
+            } else {
+              // Handles quiet hours spanning midnight
+              return current >= start || current < end;
+            }
+          };
+
+          if (isInQuietHours(currentTime, prefs.quiet_hours_start, prefs.quiet_hours_end)) {
+            return new Response(
+              JSON.stringify({ message: 'In quiet hours' }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+          }
+        }
+      }
+    }
 
     // Fetch subscriptions
     let query = supabaseClient

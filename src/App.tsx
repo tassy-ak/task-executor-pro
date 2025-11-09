@@ -9,6 +9,7 @@ import Install from "./pages/Install";
 import Auth from "./pages/Auth";
 import Threats from "./pages/Threats";
 import BlockedIPs from "./pages/BlockedIPs";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/threats" element={<Threats />} />
             <Route path="/blocked-ips" element={<BlockedIPs />} />
+            <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
