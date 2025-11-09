@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Download, Smartphone, Monitor, CheckCircle, Tablet, Globe } from 'lucide-react';
+import { Shield, Download, Smartphone, Monitor, CheckCircle, Tablet, Globe, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '@/hooks/useNotifications';
 
 const Install = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -12,6 +13,7 @@ const Install = () => {
   const [deviceType, setDeviceType] = useState<string>('');
   const [browserType, setBrowserType] = useState<string>('');
   const navigate = useNavigate();
+  const { isSupported, permission, requestPermission } = useNotifications();
 
   const detectDevice = () => {
     const ua = navigator.userAgent;
@@ -257,6 +259,41 @@ const Install = () => {
                   </span>
                 </p>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Notification Settings */}
+        {isSupported && (
+          <Card className="border-border/50 bg-card/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                Security Alerts
+              </CardTitle>
+              <CardDescription>
+                Enable push notifications to receive real-time security alerts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {permission === 'granted' ? (
+                <div className="flex items-center gap-3 text-sm">
+                  <CheckCircle className="h-5 w-5 text-success" />
+                  <span className="text-muted-foreground">
+                    Push notifications are enabled. You'll receive alerts about security threats.
+                  </span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Get instant alerts when new threats are detected on your network.
+                  </p>
+                  <Button onClick={requestPermission} className="w-full sm:w-auto">
+                    <Bell className="h-4 w-4 mr-2" />
+                    Enable Notifications
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

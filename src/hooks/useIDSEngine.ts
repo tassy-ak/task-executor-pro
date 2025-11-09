@@ -191,6 +191,25 @@ export function useIDSEngine() {
                 console.log('AI analysis triggered for threat:', threatData.id);
               }
             });
+
+            // Send push notification for high severity threats
+            if (analysisResult.severity === 'critical' || analysisResult.severity === 'high') {
+              supabase.functions.invoke('send-notification', {
+                body: {
+                  title: `${analysisResult.severity.toUpperCase()} Security Threat Detected`,
+                  body: `${analysisResult.threatType} from ${packet.sourceIP}`,
+                  data: {
+                    threatId: threatData.id,
+                    type: analysisResult.threatType,
+                    severity: analysisResult.severity,
+                  },
+                },
+              }).then(({ error: notificationError }) => {
+                if (notificationError) {
+                  console.error('Error sending notification:', notificationError);
+                }
+              });
+            }
           }
         });
 
