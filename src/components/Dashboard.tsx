@@ -174,7 +174,7 @@ const Dashboard = () => {
             <CardDescription>Recent security incidents</CardDescription>
           </CardHeader>
           <CardContent>
-            <ThreatAlert threats={threats} />
+            <ThreatAlert threats={realtimeThreats} />
           </CardContent>
         </Card>
       </div>
