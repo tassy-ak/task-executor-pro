@@ -1,28 +1,26 @@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertTriangle, Shield, XCircle, Brain } from "lucide-react";
-import { DetectedThreat } from "@/hooks/useIDSEngine";
+import { AlertTriangle, Shield, XCircle } from "lucide-react";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Threat = Tables<'threats'>;
 
 interface ThreatAlertProps {
-  threats: DetectedThreat[];
+  threats: Threat[];
 }
 
 const severityColors = {
   critical: "destructive",
   high: "warning",
   medium: "default",
+  low: "secondary",
 } as const;
 
 const statusIcons = {
   blocked: XCircle,
   mitigated: Shield,
+  active: AlertTriangle,
   monitoring: AlertTriangle,
-};
-
-const detectionMethodIcons = {
-  signature: Shield,
-  anomaly: Brain,
-  hybrid: AlertTriangle,
 };
 
 export const ThreatAlert = ({ threats = [] }: ThreatAlertProps) => {
@@ -37,12 +35,14 @@ export const ThreatAlert = ({ threats = [] }: ThreatAlertProps) => {
       </div>
     );
   }
+
   return (
     <ScrollArea className="h-[400px] pr-4">
       <div className="space-y-3">
         {threats.map((threat) => {
-          const StatusIcon = statusIcons[threat.status];
-          const DetectionIcon = detectionMethodIcons[threat.detectionMethod];
+          const StatusIcon = statusIcons[threat.status as keyof typeof statusIcons] || AlertTriangle;
+          const detectedTime = new Date(threat.detected_at).toLocaleTimeString();
+          
           return (
             <div
               key={threat.id}
@@ -51,33 +51,32 @@ export const ThreatAlert = ({ threats = [] }: ThreatAlertProps) => {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
                   <StatusIcon className="h-4 w-4 text-destructive" />
-                  <span className="font-semibold text-sm">{threat.type}</span>
+                  <span className="font-semibold text-sm">{threat.threat_type}</span>
                 </div>
-                <Badge variant={severityColors[threat.severity as keyof typeof severityColors]} className="text-xs">
+                <Badge variant={severityColors[threat.severity as keyof typeof severityColors] || "default"} className="text-xs">
                   {threat.severity}
                 </Badge>
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-mono">{threat.ip}</span>
-                <span>{threat.time}</span>
+                <span className="font-mono">{threat.source_ip}</span>
+                <span>{detectedTime}</span>
               </div>
               <div className="flex items-center gap-2 pt-1">
                 <Badge variant="outline" className="text-xs capitalize border-primary/30">
                   {threat.status}
                 </Badge>
-                <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                  <DetectionIcon className="h-3 w-3" />
-                  {threat.detectionMethod}
-                </Badge>
-                {threat.confidence && (
-                  <Badge variant="outline" className="text-xs">
-                    {Math.round(threat.confidence * 100)}% confident
+                {threat.blocked && (
+                  <Badge variant="destructive" className="text-xs">
+                    Blocked
                   </Badge>
                 )}
               </div>
-              {threat.details && (
-                <p className="text-xs text-muted-foreground pt-1 border-t border-border/30">
-                  {threat.details}
+              <p className="text-xs text-muted-foreground pt-1 border-t border-border/30">
+                {threat.description}
+              </p>
+              {threat.ai_analysis && (
+                <p className="text-xs text-primary/80 pt-1">
+                  AI: {threat.ai_analysis}
                 </p>
               )}
             </div>
