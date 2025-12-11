@@ -12,14 +12,40 @@ import { SecurityChatbot } from "./SecurityChatbot";
 import { useIDSEngine } from "@/hooks/useIDSEngine";
 import { useRealtimeThreats } from "@/hooks/useRealtimeThreats";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { isActive, threats, events, stats, trafficData } = useIDSEngine();
+  const { isActive, events, trafficData } = useIDSEngine();
   const { realtimeThreats } = useRealtimeThreats();
   const { user, signOut } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [blockedIPsCount, setBlockedIPsCount] = useState(0);
+
+  // Fetch blocked IPs count
+  useEffect(() => {
+    const fetchBlockedIPs = async () => {
+      const { count } = await supabase
+        .from('blocked_ips')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+      setBlockedIPsCount(count || 0);
+    };
+    fetchBlockedIPs();
+
+    // Subscribe to blocked_ips changes
+    const channel = supabase
+      .channel('blocked-ips-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'blocked_ips' }, () => {
+        fetchBlockedIPs();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -108,8 +134,8 @@ const Dashboard = () => {
         <div onClick={() => navigate('/threats')} className="cursor-pointer">
           <StatsCard
             title="Threats Detected"
-            value={stats.threatsDetected.toString()}
-            change={`${stats.threatsBlocked} blocked automatically`}
+            value={realtimeThreats.length.toString()}
+            change={`${realtimeThreats.filter(t => t.blocked).length} blocked`}
             icon={AlertTriangle}
             trend="up"
             variant="danger"
@@ -118,7 +144,7 @@ const Dashboard = () => {
         <div onClick={() => navigate('/blocked-ips')} className="cursor-pointer">
           <StatsCard
             title="Blocked IPs"
-            value={stats.blockedIPs.toString()}
+            value={blockedIPsCount.toString()}
             change="Active threat prevention"
             icon={Lock}
             trend="up"
@@ -126,17 +152,17 @@ const Dashboard = () => {
           />
         </div>
         <StatsCard
-          title="Packets Analyzed"
-          value={stats.totalPackets.toString()}
-          change={`${stats.normalPackets} normal traffic`}
+          title="Active Threats"
+          value={realtimeThreats.filter(t => t.status === 'active').length.toString()}
+          change="Requiring attention"
           icon={Eye}
           trend="neutral"
           variant="success"
         />
         <StatsCard
-          title="Detection Rate"
-          value={stats.totalPackets > 0 ? `${Math.round((stats.threatsDetected / stats.totalPackets) * 100)}%` : "0%"}
-          change="Hybrid detection active"
+          title="Critical Threats"
+          value={realtimeThreats.filter(t => t.severity === 'critical').length.toString()}
+          change="High priority alerts"
           icon={Database}
           trend="neutral"
           variant="info"
