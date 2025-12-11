@@ -8,12 +8,15 @@ import { StatsCard } from "./StatsCard";
 import { ThreatAlert } from "./ThreatAlert";
 import { NetworkChart } from "./NetworkChart";
 import { RecentActivity } from "./RecentActivity";
+import { SecurityChatbot } from "./SecurityChatbot";
 import { useIDSEngine } from "@/hooks/useIDSEngine";
+import { useRealtimeThreats } from "@/hooks/useRealtimeThreats";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { isActive, threats, events, stats, trafficData } = useIDSEngine();
+  const { realtimeThreats } = useRealtimeThreats();
   const { user, signOut } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
@@ -186,6 +189,9 @@ const Dashboard = () => {
           <RecentActivity events={events} />
         </CardContent>
       </Card>
+
+      {/* Security Chatbot */}
+      <SecurityChatbot />
     </div>
   );
 };
