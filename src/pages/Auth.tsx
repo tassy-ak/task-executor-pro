@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Loader2 } from 'lucide-react';
+import { Shield, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
 const signInSchema = z.object({
@@ -29,6 +30,9 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
@@ -125,6 +129,97 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const emailValidation = z.string().trim().email('Invalid email address').safeParse(resetEmail);
+      
+      if (!emailValidation.success) {
+        toast({
+          title: 'Validation Error',
+          description: 'Please enter a valid email address',
+          variant: 'destructive'
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(emailValidation.data, {
+        redirectTo: `${window.location.origin}/auth`
+      });
+
+      if (error) {
+        toast({
+          title: 'Error',
+          description: error.message,
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Check your email',
+          description: 'Password reset link has been sent'
+        });
+        setForgotPasswordMode(false);
+        setResetEmail('');
+      }
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive'
+      });
+    }
+
+    setLoading(false);
+  };
+
+  if (forgotPasswordMode) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+                <Shield className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+            <CardTitle>Reset Password</CardTitle>
+            <CardDescription>Enter your email to receive a reset link</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">Email</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Send Reset Link
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => setForgotPasswordMode(false)}
+              >
+                Back to Sign In
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <Card className="w-full max-w-md">
@@ -159,17 +254,37 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Password</Label>
-                  <Input
-                    id="signin-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signin-password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign In
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="w-full text-sm"
+                  onClick={() => setForgotPasswordMode(true)}
+                >
+                  Forgot password?
                 </Button>
               </form>
             </TabsContent>
@@ -200,14 +315,26 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={8}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={8}
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Must be 8+ characters with uppercase and number
                   </p>

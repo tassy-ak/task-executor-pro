@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, AlertTriangle, Activity, Lock, Eye, Database, Download, LogOut, Settings } from "lucide-react";
+import { Shield, AlertTriangle, Activity, Lock, Eye, Database, LogOut, Settings } from "lucide-react";
 import { StatsCard } from "./StatsCard";
 import { ThreatAlert } from "./ThreatAlert";
 import { NetworkChart } from "./NetworkChart";
@@ -20,8 +20,6 @@ const Dashboard = () => {
   const { isActive, events, trafficData } = useIDSEngine();
   const { realtimeThreats } = useRealtimeThreats();
   const { user, signOut } = useAuth();
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
   const [blockedIPsCount, setBlockedIPsCount] = useState(0);
 
   // Fetch blocked IPs count
@@ -54,35 +52,6 @@ const Dashboard = () => {
     }
   }, [user, navigate]);
 
-  useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setIsInstallable(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handler);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-    };
-  }, []);
-
-  const handleInstall = async () => {
-    if (!deferredPrompt) {
-      navigate('/install');
-      return;
-    }
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-
-    if (outcome === 'accepted') {
-      setIsInstallable(false);
-    }
-    setDeferredPrompt(null);
-  };
-
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
@@ -109,9 +78,9 @@ const Dashboard = () => {
         </div>
         <div className="flex gap-3 items-center">
           <DemoThreatGenerator />
-          <Button onClick={handleInstall} variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Install App
+          <Button onClick={() => navigate('/settings')} variant="outline" className="gap-2">
+            <Settings className="h-4 w-4" />
+            Settings
           </Button>
           <Button onClick={() => navigate('/settings')} variant="outline" className="gap-2">
             <Settings className="h-4 w-4" />
