@@ -9,6 +9,7 @@ import { ThreatAlert } from "./ThreatAlert";
 import { NetworkChart } from "./NetworkChart";
 import { RecentActivity } from "./RecentActivity";
 import { SecurityChatbot } from "./SecurityChatbot";
+import { DemoThreatGenerator } from "./DemoThreatGenerator";
 import { useIDSEngine } from "@/hooks/useIDSEngine";
 import { useRealtimeThreats } from "@/hooks/useRealtimeThreats";
 import { useAuth } from "@/contexts/AuthContext";
@@ -106,7 +107,8 @@ const Dashboard = () => {
             </p>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <DemoThreatGenerator />
           <Button onClick={handleInstall} variant="outline" className="gap-2">
             <Download className="h-4 w-4" />
             Install App
