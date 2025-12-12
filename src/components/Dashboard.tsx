@@ -82,10 +82,6 @@ const Dashboard = () => {
             <Settings className="h-4 w-4" />
             Settings
           </Button>
-          <Button onClick={() => navigate('/settings')} variant="outline" className="gap-2">
-            <Settings className="h-4 w-4" />
-            Settings
-          </Button>
           <Button onClick={handleSignOut} variant="outline" className="gap-2">
             <LogOut className="h-4 w-4" />
             Logout
